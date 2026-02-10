@@ -1,0 +1,34 @@
+@page
+@model WebApplication1.Pages.Account.EnableAuthenticatorModel
+@{
+    ViewData["Title"] = "Enable authenticator";
+}
+
+<h1>Enable authenticator app</h1>
+
+<p>Scan the QR code below with your authenticator app (Google Authenticator, Authy, etc.) or enter the secret key manually.</p>
+
+<div class="mb-3">
+    <img src="@Model.QrCodeImageUrl" alt="QR Code" />
+</div>
+
+<div class="mb-3">
+    <strong>Secret key:</strong>
+    <div class="p-2 bg-light border">@Model.FormattedKey</div>
+</div>
+
+<form method="post">
+    <div class="mb-3">
+        <label asp-for="Input.Code" class="form-label">Verification code</label>
+        <input asp-for="Input.Code" class="form-control" autocomplete="one-time-code" />
+        <span asp-validation-for="Input.Code" class="text-danger"></span>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Verify and enable</button>
+        <a asp-page="/Index" class="btn btn-link">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

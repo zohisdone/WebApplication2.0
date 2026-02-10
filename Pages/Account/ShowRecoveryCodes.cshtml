@@ -1,0 +1,27 @@
+@page
+@model WebApplication1.Pages.Account.ShowRecoveryCodesModel
+@{
+    ViewData["Title"] = "Recovery codes";
+}
+
+<h1>Recovery codes</h1>
+
+<p>Keep these codes in a safe place. Each code can be used once to sign in.</p>
+
+@if (Model.Codes != null && Model.Codes.Any())
+{
+    <ul class="list-group mb-3">
+        @foreach (var c in Model.Codes)
+        {
+            <li class="list-group-item">@c</li>
+        }
+    </ul>
+
+    <form method="post" asp-page-handler="Download">
+        <button type="submit" class="btn btn-primary">Download recovery codes</button>
+    </form>
+}
+else
+{
+    <p class="text-muted">No recovery codes available.</p>
+}

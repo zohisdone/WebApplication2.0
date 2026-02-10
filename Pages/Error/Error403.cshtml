@@ -1,0 +1,15 @@
+@page
+@model Pages.Error.Error403Model
+@{
+    ViewData["Title"] = "Access denied";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12 text-center">
+            <h1>403 — Access denied</h1>
+            <p class="lead">You do not have permission to access this resource. If you believe this is an error, contact support.</p>
+            <a class="btn btn-primary" asp-page="/Index">Return home</a>
+        </div>
+    </div>
+</div>

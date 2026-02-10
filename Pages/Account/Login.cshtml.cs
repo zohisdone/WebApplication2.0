@@ -86,6 +86,12 @@ namespace WebApplication1.Pages.Account
                 return LocalRedirect("~/");
             }
 
+            if (result.RequiresTwoFactor)
+            {
+                // Redirect to two-factor page; remember the 'RememberMe' selection so the 2FA step can persist the cookie if needed
+                return RedirectToPage("/Account/TwoFactorLogin", new { RememberMe = Input.RememberMe });
+            }
+
             if (result.IsLockedOut)
             {
                 ModelState.AddModelError("", "Account locked out. Try again later.");

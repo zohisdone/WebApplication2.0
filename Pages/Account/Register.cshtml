@@ -10,7 +10,7 @@
         <div class="col-12 col-md-8 col-lg-6">
             <h2 class="mb-4">Register — Ace Job Agency</h2>
 
-            <form method="post" enctype="multipart/form-data" id="registerForm">
+            <form id="registerForm" method="post" enctype="multipart/form-data">
                 <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
                 <div class="mb-3">
@@ -70,15 +70,15 @@
 
                 <div class="mb-3">
                     <label asp-for="Input.DateOfBirth" class="form-label"></label>
-                    <input asp-for="Input.DateOfBirth" class="form-control" type="date" />
-                    <span asp-validation-for="Input.DateOfBirth" class="text-danger"></span>
+                    <input asp-for="Input.DateOfBirth" class="form-control" type="date" id="dobInput" />
+                    <span asp-validation-for="Input.DateOfBirth" class="text-danger" id="dobError"></span>
                 </div>
 
                 <div class="mb-3">
                     <label asp-for="Resume" class="form-label">Resume</label>
-                    <input type="file" asp-for="Resume" class="form-control" />
+                    <input type="file" asp-for="Resume" class="form-control" id="resumeInput" accept=".pdf,.docx" />
                     <small class="form-text text-muted">Allowed file types: PDF, DOCX. Max size: 5 MB.</small>
-                    <span asp-validation-for="Resume" class="text-danger"></span>
+                    <span asp-validation-for="Resume" class="text-danger" id="resumeError"></span>
                 </div>
 
                 <div class="mb-3">
@@ -100,15 +100,85 @@
 @section Scripts {
     <script src="https://www.google.com/recaptcha/api.js?render=@Configuration["ReCaptcha:SiteKey"]"></script>
     <script>
-        // Acquire reCAPTCHA v3 token before submit
+        // Client-side validation function
+        function validateRegisterForm() {
+            var errors = [];
+
+            // Clear previous inline errors
+            document.getElementById('dobError').textContent = '';
+            document.getElementById('resumeError').textContent = '';
+
+            // Date of birth cannot be in the future
+            var dobEl = document.getElementById('dobInput');
+            if (dobEl && dobEl.value) {
+                var dob = new Date(dobEl.value);
+                var today = new Date();
+                // compare dates ignoring time
+                dob.setHours(0,0,0,0);
+                today.setHours(0,0,0,0);
+                if (dob > today) {
+                    var msg = 'Date of birth cannot be in the future.';
+                    document.getElementById('dobError').textContent = msg;
+                    errors.push(msg);
+                }
+            }
+
+            // Resume file checks
+            var resumeEl = document.getElementById('resumeInput');
+            if (resumeEl) {
+                if (!resumeEl.files || resumeEl.files.length === 0) {
+                    var msg = 'Resume is required.';
+                    document.getElementById('resumeError').textContent = msg;
+                    errors.push(msg);
+                } else {
+                    var file = resumeEl.files[0];
+                    var allowed = ['.pdf', '.docx'];
+                    var name = file.name.toLowerCase();
+                    var ok = allowed.some(function(ext) { return name.endsWith(ext); });
+                    if (!ok) {
+                        var msg = 'Allowed file types: .pdf, .docx';
+                        document.getElementById('resumeError').textContent = msg;
+                        errors.push(msg);
+                    }
+                    var max = 5 * 1024 * 1024;
+                    if (file.size > max) {
+                        var msg = 'Max resume size is 5 MB';
+                        document.getElementById('resumeError').textContent = msg;
+                        errors.push(msg);
+                    }
+                }
+            }
+
+            return errors;
+        }
+
+        // Acquire reCAPTCHA v3 token before submit, but only after client-side validation
         (function () {
             const form = document.getElementById('registerForm');
             if (!form) return;
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
+
+                var errors = validateRegisterForm();
+                if (errors.length > 0) {
+                    // show modal with first error using layout's infoModal
+                    try {
+                        document.getElementById('infoModalTitle').textContent = 'Validation error';
+                        document.getElementById('infoModalBody').textContent = errors[0];
+                        var infoModal = new bootstrap.Modal(document.getElementById('infoModal'));
+                        infoModal.show();
+                    } catch (ex) {
+                        alert(errors[0]);
+                    }
+                    return;
+                }
+
                 grecaptcha.ready(function () {
                     grecaptcha.execute('@Configuration["ReCaptcha:SiteKey"]', { action: 'register' }).then(function (token) {
                         document.getElementById('recaptchaToken').value = token;
+                        form.submit();
+                    }).catch(function () {
+                        // If recaptcha fails, still submit to allow testing
                         form.submit();
                     });
                 });

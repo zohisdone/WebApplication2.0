@@ -93,6 +93,15 @@ namespace WebApplication1.Pages.Account
 
             if (!ModelState.IsValid) return Page();
 
+            // Date of birth must not be in the future
+            if (Input.DateOfBirth.HasValue && Input.DateOfBirth.Value.Date > DateTime.UtcNow.Date)
+            {
+                ModelState.AddModelError(nameof(Input.DateOfBirth), "Date of birth cannot be in the future.");
+                TempData["ModalTitle"] = "Invalid date of birth";
+                TempData["ModalBody"] = "Date of birth cannot be in the future.";
+                return Page();
+            }
+
             // Resume validation
             if (Resume == null)
             {
@@ -146,7 +155,8 @@ namespace WebApplication1.Pages.Account
                 LastName = Input.LastName,
                 Gender = Input.Gender,
                 DateOfBirth = Input.DateOfBirth,
-                WhoAmI = Input.WhoAmI
+                WhoAmI = Input.WhoAmI,
+                EmailConfirmed = true // for testing; in prod require email confirmation
             };
 
             // Encrypt NRIC
@@ -193,6 +203,10 @@ namespace WebApplication1.Pages.Account
             });
             await _db.SaveChangesAsync();
 
+            // Optionally trigger 2FA setup modal once on next page load
+            TempData["Show2faSetup"] = Url.Page("/Account/EnableAuthenticator");
+
+            // After registration, go to home page
             return LocalRedirect("~/");
         }
     }

@@ -27,6 +27,8 @@ namespace WebApplication1.Pages
         public string? Email { get; set; }
         public string? DecryptedNRIC { get; set; }
         public List<Models.AuditLog>? RecentAuditLogs { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+        public string? ResumeUrl { get; set; }
 
         public async Task OnGetAsync()
         {
@@ -37,6 +39,8 @@ namespace WebApplication1.Pages
                 {
                     FullName = string.Join(' ', new[] { user.FirstName, user.LastName }.Where(s => !string.IsNullOrWhiteSpace(s)));
                     Email = user.Email;
+                    DateOfBirth = user.DateOfBirth;
+                    ResumeUrl = string.IsNullOrWhiteSpace(user.ResumeFilePath) ? null : Url.Content(user.ResumeFilePath);
                     try
                     {
                         DecryptedNRIC = string.IsNullOrEmpty(user.EncryptedNRIC) ? null : _enc.Unprotect(user.EncryptedNRIC);

@@ -1,0 +1,25 @@
+@page
+@model WebApplication1.Pages.Account.ManageTwoFactorModel
+@{
+    ViewData["Title"] = "Manage Two-Factor";
+}
+
+<h1>Two-factor authentication</h1>
+
+<div class="mb-3">
+    <p>Two-factor is currently: <strong>@(Model.Is2faEnabled ? "Enabled" : "Disabled")</strong></p>
+</div>
+
+<div class="mb-3">
+    @if (!Model.Is2faEnabled)
+    {
+        <a class="btn btn-primary" asp-page="/Account/EnableAuthenticator">Enable authenticator app</a>
+    }
+    else
+    {
+        <form method="post" asp-page-handler="Disable" class="d-inline">
+            <button type="submit" class="btn btn-danger">Disable two-factor</button>
+        </form>
+        <a class="btn btn-secondary" asp-page="/Account/ShowRecoveryCodes">Show recovery codes</a>
+    }
+</div>

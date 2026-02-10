@@ -60,12 +60,19 @@ namespace WebApplication1.Pages.Account
 
         public async Task<IActionResult> OnPostAsync()
         {
-            if (!ModelState.IsValid) return Page();
+            if (!ModelState.IsValid)
+            {
+                // Show validation errors inline as well as a modal summary
+                TempData["ModalTitle"] = "Validation error";
+                TempData["ModalBody"] = "Please check the form for errors and try again.";
+                return RedirectToPage();
+            }
 
             if (!PasswordRegex.IsMatch(Input.NewPassword))
             {
-                ModelState.AddModelError(nameof(Input.NewPassword), "Password must be at least 12 characters and include uppercase, lowercase, number and special character.");
-                return Page();
+                TempData["ModalTitle"] = "Invalid password";
+                TempData["ModalBody"] = "Password must be at least 12 characters and include uppercase, lowercase, number and special character.";
+                return RedirectToPage();
             }
 
             var user = await _userManager.GetUserAsync(User);
@@ -75,11 +82,13 @@ namespace WebApplication1.Pages.Account
                 return RedirectToPage("/Account/Login");
             }
 
+            // Prevent new password being same as current
             var currentVerification = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash ?? string.Empty, Input.NewPassword);
             if (currentVerification != PasswordVerificationResult.Failed)
             {
-                ModelState.AddModelError(nameof(Input.NewPassword), "New password must not be the same as your current password.");
-                return Page();
+                TempData["ModalTitle"] = "Invalid password";
+                TempData["ModalBody"] = "New password must not be the same as your current password.";
+                return RedirectToPage();
             }
 
             var lastTwo = _db.PasswordHistories
@@ -93,8 +102,9 @@ namespace WebApplication1.Pages.Account
             {
                 if (_passwordHasher.VerifyHashedPassword(user, hashed, Input.NewPassword) != PasswordVerificationResult.Failed)
                 {
-                    ModelState.AddModelError(nameof(Input.NewPassword), "New password cannot match your last two passwords.");
-                    return Page();
+                    TempData["ModalTitle"] = "Invalid password";
+                    TempData["ModalBody"] = "New password cannot match your last two passwords.";
+                    return RedirectToPage();
                 }
             }
 
@@ -102,9 +112,11 @@ namespace WebApplication1.Pages.Account
             var changeResult = await _userManager.ChangePasswordAsync(user, Input.CurrentPassword, Input.NewPassword);
             if (!changeResult.Succeeded)
             {
-                foreach (var err in changeResult.Errors)
-                    ModelState.AddModelError(string.Empty, err.Description);
-                return Page();
+                // Aggregate errors
+                var msgs = changeResult.Errors.Select(e => e.Description).ToArray();
+                TempData["ModalTitle"] = "Password change failed";
+                TempData["ModalBody"] = string.Join(" ", msgs);
+                return RedirectToPage();
             }
 
             if (!string.IsNullOrEmpty(oldHashed))
@@ -130,8 +142,7 @@ namespace WebApplication1.Pages.Account
 
             await _db.SaveChangesAsync();
 
-            await _signInManager.RefreshSignInAsync(user);
-
+            // Force logout after password change and show modal message on redirected page
             _db.AuditLogs.Add(new AuditLog
             {
                 UserId = user.Id,
@@ -141,7 +152,11 @@ namespace WebApplication1.Pages.Account
             });
             await _db.SaveChangesAsync();
 
-            TempData["StatusMessage"] = "Your password has been changed.";
+            await _signInManager.SignOutAsync();
+
+            TempData["ModalTitle"] = "Password changed";
+            TempData["ModalBody"] = "Your password has been changed. Please log in again.";
+
             return RedirectToPage("/Index");
         }
     }

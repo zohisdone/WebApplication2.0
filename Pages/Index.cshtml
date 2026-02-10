@@ -12,6 +12,12 @@
         </div>
     </div>
 
+    @if (TempData["ModalTitle"] != null || TempData["ModalBody"] != null)
+    {
+        <div id="_modalTitle" style="display:none">@TempData["ModalTitle"]</div>
+        <div id="_modalBody" style="display:none">@TempData["ModalBody"]</div>
+    }
+
     @if (User?.Identity?.IsAuthenticated == true)
     {
         <div class="row">
@@ -21,11 +27,15 @@
                         <h5 class="card-title">Your profile</h5>
                         <p><strong>Name:</strong> @Model.FullName</p>
                         <p><strong>Email:</strong> @Model.Email</p>
+                        <p><strong>Date of birth:</strong> @(Model.DateOfBirth?.ToString("yyyy-MM-dd") ?? "N/A")</p>
                         <p><strong>NRIC:</strong> @Model.DecryptedNRIC</p>
-                        <a class="btn btn-sm btn-outline-secondary" asp-page="/Account/ChangePassword">Change password</a>
-                        <form method="post" asp-page="/Account/Logout" class="d-inline">
-                            <button type="submit" class="btn btn-sm btn-danger">Logout</button>
-                        </form>
+                        @if (!string.IsNullOrEmpty(Model.ResumeUrl))
+                        {
+                            <p><strong>Resume:</strong> <a href="@Model.ResumeUrl" target="_blank" rel="noopener">View resume</a></p>
+                        }
+                        <a class="btn btn-sm btn-outline-secondary me-2" asp-page="/Account/ChangePassword">Change password</a>
+                        <button type="button" class="btn btn-sm btn-danger logout-trigger">Logout</button>
+                        <a class="btn btn-sm btn-outline-primary ms-2" asp-page="/Account/ManageTwoFactor">Manage 2FA</a>
                     </div>
                 </div>
             </div>
@@ -69,4 +79,37 @@
             </div>
         </div>
     }
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Logout trigger button click event
+            $('.logout-trigger').click(function () {
+                // Show the logout confirmation modal
+                $('#logoutConfirmationModal').modal('show');
+            });
+        });
+    </script>
+}
+
+<!-- Logout confirmation modal -->
+<div class="modal fade" id="logoutConfirmationModal" tabindex="-1" aria-labelledby="logoutConfirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="logoutConfirmationModalLabel">Confirm Logout</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to log out?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" asp-page="/Account/Logout" id="logoutForm" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
