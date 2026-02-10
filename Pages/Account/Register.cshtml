@@ -1,0 +1,141 @@
+@page
+@model WebApplication1.Pages.Account.RegisterModel
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="container mt-4 px-3">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <h2 class="mb-4">Register — Ace Job Agency</h2>
+
+            <form method="post" enctype="multipart/form-data" id="registerForm">
+                <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.FirstName" class="form-label"></label>
+                    <input asp-for="Input.FirstName" class="form-control" />
+                    <span asp-validation-for="Input.FirstName" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.LastName" class="form-label"></label>
+                    <input asp-for="Input.LastName" class="form-control" />
+                    <span asp-validation-for="Input.LastName" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.Gender" class="form-label"></label>
+                    <select asp-for="Input.Gender" class="form-select">
+                        <option value="">Select</option>
+                        <option>Male</option>
+                        <option>Female</option>
+                        <option>Other</option>
+                    </select>
+                    <span asp-validation-for="Input.Gender" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.NRIC" class="form-label"></label>
+                    <input asp-for="Input.NRIC" class="form-control" />
+                    <span asp-validation-for="Input.NRIC" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.Email" class="form-label"></label>
+                    <input asp-for="Input.Email" class="form-control" />
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.Password" class="form-label"></label>
+                    <input asp-for="Input.Password" class="form-control" id="passwordInput" />
+                    <div class="form-text">Password must be at least 12 characters and include uppercase, lowercase, number and special character.</div>
+                    <ul class="small mt-2" id="passwordHints">
+                        <li id="ph-length">At least 12 characters</li>
+                        <li id="ph-upper">At least one uppercase letter</li>
+                        <li id="ph-lower">At least one lowercase letter</li>
+                        <li id="ph-digit">At least one number</li>
+                        <li id="ph-special">At least one special character</li>
+                    </ul>
+                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.ConfirmPassword" class="form-label"></label>
+                    <input asp-for="Input.ConfirmPassword" class="form-control" />
+                    <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.DateOfBirth" class="form-label"></label>
+                    <input asp-for="Input.DateOfBirth" class="form-control" type="date" />
+                    <span asp-validation-for="Input.DateOfBirth" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Resume" class="form-label">Resume</label>
+                    <input type="file" asp-for="Resume" class="form-control" />
+                    <small class="form-text text-muted">Allowed file types: PDF, DOCX. Max size: 5 MB.</small>
+                    <span asp-validation-for="Resume" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.WhoAmI" class="form-label"></label>
+                    <textarea asp-for="Input.WhoAmI" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="Input.WhoAmI" class="text-danger"></span>
+                </div>
+
+                <input type="hidden" asp-for="RecaptchaToken" id="recaptchaToken" />
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">Register</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://www.google.com/recaptcha/api.js?render=@Configuration["ReCaptcha:SiteKey"]"></script>
+    <script>
+        // Acquire reCAPTCHA v3 token before submit
+        (function () {
+            const form = document.getElementById('registerForm');
+            if (!form) return;
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                grecaptcha.ready(function () {
+                    grecaptcha.execute('@Configuration["ReCaptcha:SiteKey"]', { action: 'register' }).then(function (token) {
+                        document.getElementById('recaptchaToken').value = token;
+                        form.submit();
+                    });
+                });
+            });
+        })();
+
+        // Client-side password hints
+        (function () {
+            const pwd = document.getElementById('passwordInput');
+            if (!pwd) return;
+            const hints = {
+                length: document.getElementById('ph-length'),
+                upper: document.getElementById('ph-upper'),
+                lower: document.getElementById('ph-lower'),
+                digit: document.getElementById('ph-digit'),
+                special: document.getElementById('ph-special')
+            };
+            pwd.addEventListener('input', function () {
+                const v = pwd.value;
+                hints.length.style.textDecoration = v.length >= 12 ? 'line-through' : 'none';
+                hints.upper.style.textDecoration = /[A-Z]/.test(v) ? 'line-through' : 'none';
+                hints.lower.style.textDecoration = /[a-z]/.test(v) ? 'line-through' : 'none';
+                hints.digit.style.textDecoration = /\d/.test(v) ? 'line-through' : 'none';
+                hints.special.style.textDecoration = /\W/.test(v) ? 'line-through' : 'none';
+            });
+        })();
+    </script>
+
+    <partial name="_ValidationScriptsPartial" />
+}

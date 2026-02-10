@@ -1,0 +1,72 @@
+﻿@page
+@model WebApplication1.Pages.IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h1 class="display-4">Ace Job Agency</h1>
+            <p class="lead">Find your next opportunity — manage your profile and applications securely.</p>
+        </div>
+    </div>
+
+    @if (User?.Identity?.IsAuthenticated == true)
+    {
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Your profile</h5>
+                        <p><strong>Name:</strong> @Model.FullName</p>
+                        <p><strong>Email:</strong> @Model.Email</p>
+                        <p><strong>NRIC:</strong> @Model.DecryptedNRIC</p>
+                        <a class="btn btn-sm btn-outline-secondary" asp-page="/Account/ChangePassword">Change password</a>
+                        <form method="post" asp-page="/Account/Logout" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-danger">Logout</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Recent activity</h5>
+                        @if (Model.RecentAuditLogs != null && Model.RecentAuditLogs.Any())
+                        {
+                            <ul class="list-group list-group-flush">
+                                @foreach (var a in Model.RecentAuditLogs)
+                                {
+                                    <li class="list-group-item">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <strong>@a.Event</strong>
+                                                <div class="small text-muted">@a.Details</div>
+                                            </div>
+                                            <div class="text-muted small">@a.OccurredAt.ToLocalTime().ToString("g")</div>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No recent activity.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-12 text-center">
+                <a class="btn btn-primary me-2" asp-page="/Account/Login">Login</a>
+                <a class="btn btn-outline-primary" asp-page="/Account/Register">Register</a>
+            </div>
+        </div>
+    }
+</div>
