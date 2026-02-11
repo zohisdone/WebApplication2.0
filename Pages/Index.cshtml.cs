@@ -29,6 +29,7 @@ namespace WebApplication1.Pages
         public List<Models.AuditLog>? RecentAuditLogs { get; set; }
         public DateTime? DateOfBirth { get; set; }
         public string? ResumeUrl { get; set; }
+        public string? WhoAmI { get; set; }
 
         public async Task OnGetAsync()
         {
@@ -41,6 +42,7 @@ namespace WebApplication1.Pages
                     Email = user.Email;
                     DateOfBirth = user.DateOfBirth;
                     ResumeUrl = string.IsNullOrWhiteSpace(user.ResumeFilePath) ? null : Url.Content(user.ResumeFilePath);
+                    WhoAmI = string.IsNullOrWhiteSpace(user.WhoAmI) ? null : user.WhoAmI;
                     try
                     {
                         DecryptedNRIC = string.IsNullOrEmpty(user.EncryptedNRIC) ? null : _enc.Unprotect(user.EncryptedNRIC);

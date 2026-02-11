@@ -60,7 +60,7 @@ namespace WebApplication1.Pages.Account
                 return Page();
             }
 
-            var email = Input.Email.Trim();
+            var email = Input.Email?.Trim() ?? string.Empty;
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
             // Validate reCAPTCHA server-side
@@ -70,7 +70,7 @@ namespace WebApplication1.Pages.Account
                 return Page();
             }
 
-            // Log the request attempt for monitoring
+            // Log the request attempt for monitoring (generic)
             try
             {
                 _db.AuditLogs.Add(new AuditLog
@@ -78,7 +78,7 @@ namespace WebApplication1.Pages.Account
                     UserId = string.Empty,
                     Event = "PasswordResetRequested",
                     IpAddress = ip,
-                    Details = $"Requested for {email}",
+                    Details = null,
                     OccurredAt = DateTime.UtcNow
                 });
                 await _db.SaveChangesAsync();
@@ -90,17 +90,13 @@ namespace WebApplication1.Pages.Account
 
             // Optional rate-limiting
             var cutoff = DateTime.UtcNow.AddMinutes(-15);
-            var perAccountCount = await _db.AuditLogs
-                .Where(a => a.Event == "PasswordResetRequested" && a.Details != null && a.Details.Contains(email) && a.OccurredAt >= cutoff)
-                .CountAsync();
             var perIpCount = await _db.AuditLogs
                 .Where(a => a.Event == "PasswordResetRequested" && a.IpAddress == ip && a.OccurredAt >= cutoff)
                 .CountAsync();
 
-            if (perAccountCount > 5 || perIpCount > 50)
+            if (perIpCount > 50)
             {
-                _logger.LogWarning("Rate-limiting triggered for password reset: email={Email}, ip={Ip}, accountCount={AccountCount}, ipCount={IpCount}",
-                    email, ip, perAccountCount, perIpCount);
+                _logger.LogWarning("Rate-limiting triggered for password reset from ip={Ip}", ip);
 
                 try
                 {
@@ -109,7 +105,7 @@ namespace WebApplication1.Pages.Account
                         UserId = string.Empty,
                         Event = "PasswordResetRateLimited",
                         IpAddress = ip,
-                        Details = $"Throttled request for {email}. accountCount={perAccountCount}, ipCount={perIpCount}",
+                        Details = null,
                         OccurredAt = DateTime.UtcNow
                     });
                     await _db.SaveChangesAsync();
@@ -147,19 +143,19 @@ namespace WebApplication1.Pages.Account
                         UserId = user.Id,
                         Event = "PasswordResetEmailSent",
                         IpAddress = ip,
-                        Details = $"Reset email sent to {user.Email}",
+                        Details = null,
                         OccurredAt = DateTime.UtcNow
                     });
                     await _db.SaveChangesAsync();
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to generate/send password reset email for {Email}", email);
+                    _logger.LogError(ex, "Failed to generate/send password reset email");
                 }
             }
             else
             {
-                _logger.LogInformation("Password reset requested for unconfirmed/nonexistent email: {Email}", email);
+                _logger.LogInformation("Password reset requested (generic outcome)");
             }
 
             TempData["StatusMessage"] = "If an account with that email exists, a password reset link has been sent.";

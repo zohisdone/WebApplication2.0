@@ -29,6 +29,10 @@
                         <p><strong>Email:</strong> @Model.Email</p>
                         <p><strong>Date of birth:</strong> @(Model.DateOfBirth?.ToString("yyyy-MM-dd") ?? "N/A")</p>
                         <p><strong>NRIC:</strong> @Model.DecryptedNRIC</p>
+                        @if (!string.IsNullOrEmpty(Model.WhoAmI))
+                        {
+                            <p><strong>About you:</strong> @Model.WhoAmI</p>
+                        }
                         @if (!string.IsNullOrEmpty(Model.ResumeUrl))
                         {
                             <p><strong>Resume:</strong> <a href="@Model.ResumeUrl" target="_blank" rel="noopener">View resume</a></p>
